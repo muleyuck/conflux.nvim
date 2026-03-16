@@ -1,0 +1,19 @@
+Line before first conflict.
+
+<<<<<<< HEAD
+This is our version of line A.
+This is our version of line B.
+=======
+This is their version of line A.
+This is their version of line B.
+>>>>>>> feature-branch
+
+Middle content between conflicts.
+
+<<<<<<< HEAD
+Second conflict: our line.
+=======
+Second conflict: their line.
+>>>>>>> feature-branch
+
+Line after last conflict.

@@ -1,0 +1,14 @@
+File with diff3-style conflict markers (ancestor section included).
+
+<<<<<<< HEAD
+Our updated implementation.
+With multiple lines.
+||||||| base
+Original ancestor content.
+Goes here.
+=======
+Their updated implementation.
+Also multiple lines.
+>>>>>>> feature-branch
+
+Normal content after the conflict.

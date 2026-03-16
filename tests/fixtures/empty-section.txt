@@ -1,0 +1,15 @@
+Test file with empty sections in conflict blocks.
+
+<<<<<<< HEAD
+=======
+Only theirs has content here.
+>>>>>>> feature-branch
+
+Another block below:
+
+<<<<<<< HEAD
+Only ours has content here.
+=======
+>>>>>>> feature-branch
+
+End of file.

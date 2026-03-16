@@ -1,0 +1,7 @@
+This file has no conflict markers.
+
+It is used to verify that conflux does not attach to clean files.
+
+Some lines that look almost like markers but are not:
+ <<<<<<< not at start of line
+normal content
