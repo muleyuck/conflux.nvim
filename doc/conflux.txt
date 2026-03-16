@@ -1,0 +1,176 @@
+*conflux.txt*  Git conflict resolution for Neovim                    *conflux*
+
+Author:   conflux.nvim contributors
+License:  MIT
+
+==============================================================================
+CONTENTS                                                    *conflux-contents*
+
+  1. Introduction ............... |conflux-intro|
+  2. Requirements ............... |conflux-requirements|
+  3. Setup ...................... |conflux-setup|
+  4. Configuration .............. |conflux-config|
+  5. Commands ................... |conflux-commands|
+  6. Keymaps .................... |conflux-keymaps|
+  7. Highlights ................. |conflux-highlights|
+  8. API ........................ |conflux-api|
+
+==============================================================================
+1. Introduction                                               *conflux-intro*
+
+conflux.nvim provides VSCode-like Git conflict resolution in Neovim.
+When you open a file containing conflict markers (produced by `git merge`,
+`git rebase`, etc.), conflux automatically highlights each conflict block
+with distinct colors and provides commands to quickly accept one side.
+
+Features:
+  - Automatic detection of conflict markers on `BufReadPost` / `BufWritePost`
+  - Color-coded extmark highlights for ours, theirs, and (diff3) ancestor
+  - Commands and keymaps: ours / theirs / both / none
+  - diff3 support (`|||||||` ancestor section)
+  - Highlight restoration on colorscheme change
+
+==============================================================================
+2. Requirements                                        *conflux-requirements*
+
+  - Neovim >= 0.10
+
+==============================================================================
+3. Setup                                                      *conflux-setup*
+
+Call `require('conflux').setup()` somewhere in your config (e.g. init.lua).
+With lazy.nvim: >lua
+
+  {
+    'username/conflux.nvim',
+    event = 'BufReadPost',
+    opts  = {},   -- calls setup() with an empty table (all defaults)
+  }
+<
+With no plugin manager: >lua
+
+  require('conflux').setup()
+<
+
+==============================================================================
+4. Configuration                                             *conflux-config*
+
+Pass a table to `setup()`. All keys are optional. >lua
+
+  require('conflux').setup({
+    -- Highlight group specs. Each value is passed directly to nvim_set_hl().
+    -- Use { bg = '#rrggbb' } for colors or { link = 'GroupName' } for links.
+    highlights = {
+      ours             = { bg = '#2b4d2b' },
+      ours_marker      = { bg = '#3d6b3d', bold = true },
+      ancestor         = { bg = '#4d3d1a' },   -- diff3 ancestor section
+      ancestor_marker  = { bg = '#6b5a1a', bold = true },
+      separator        = { bg = '#3d3d3d', bold = true },
+      theirs           = { bg = '#1a2b4d' },
+      theirs_marker    = { bg = '#1a3d6b', bold = true },
+    },
+
+    -- Set false to disable default buffer-local keymaps
+    default_mappings = true,
+
+    -- Keys used for default_mappings (ignored when default_mappings = false)
+    keymaps = {
+      ours   = 'co',
+      theirs = 'ct',
+      both   = 'cb',
+      none   = 'c0',
+    },
+  })
+<
+
+NOTE: The default keymaps `co` and `ct` are two-key sequences that may
+conflict with Vim's built-in `c` (change) operator. See |conflux-keymaps|.
+
+==============================================================================
+5. Commands                                                *conflux-commands*
+
+All commands operate on the conflict block under the cursor.
+
+  *:ConfluxOurs*    Keep the HEAD (ours) changes; discard theirs.
+  *:ConfluxTheirs*  Keep the incoming (theirs) changes; discard ours.
+  *:ConfluxBoth*    Keep both changes (ours first, then theirs).
+  *:ConfluxNone*    Discard both sides (delete the entire block).
+
+After applying a resolution, the conflict markers are removed and the buffer
+is re-scanned. When all conflicts are resolved, highlights are cleared.
+
+==============================================================================
+6. Keymaps                                                  *conflux-keymaps*
+
+Default buffer-local normal-mode keymaps (set when a conflict file is opened):
+
+  Key    Action
+  ------+-----------------------------------------------
+  co     Accept ours   (equivalent to :ConfluxOurs)
+  ct     Accept theirs (equivalent to :ConfluxTheirs)
+  cb     Accept both   (equivalent to :ConfluxBoth)
+  c0     Accept none   (equivalent to :ConfluxNone)
+
+To use custom keys, set `default_mappings = false` and define your own: >lua
+
+  require('conflux').setup({
+    default_mappings = false,
+  })
+
+  -- Then in an autocmd or ftplugin:
+  vim.keymap.set('n', '<leader>co', '<Cmd>ConfluxOurs<CR>')
+  vim.keymap.set('n', '<leader>ct', '<Cmd>ConfluxTheirs<CR>')
+  vim.keymap.set('n', '<leader>cb', '<Cmd>ConfluxBoth<CR>')
+  vim.keymap.set('n', '<leader>c0', '<Cmd>ConfluxNone<CR>')
+<
+
+NOTE: `co` and `ct` as two-key sequences may momentarily delay Vim's
+built-in `c` operator. If this is undesirable, use `default_mappings = false`
+and choose non-conflicting keys.
+
+==============================================================================
+7. Highlights                                             *conflux-highlights*
+
+conflux defines the following highlight groups. Override them after `setup()`:
+
+  *ConfluxOurs*           Background for ours (HEAD) content lines
+  *ConfluxOursMarker*     Background for the `<<<<<<<` marker line
+  *ConfluxAncestor*       Background for ancestor content (diff3)
+  *ConfluxAncestorMarker* Background for the `|||||||` marker line (diff3)
+  *ConfluxSeparator*      Background for the `=======` separator line
+  *ConfluxTheirs*         Background for theirs (incoming) content lines
+  *ConfluxTheirsMarker*   Background for the `>>>>>>>` marker line
+
+Example override: >lua
+
+  vim.api.nvim_set_hl(0, 'ConfluxOurs', { link = 'DiffAdd' })
+<
+
+Highlights are re-applied automatically on `ColorScheme` changes.
+
+==============================================================================
+8. API                                                          *conflux-api*
+
+`require('conflux').setup({...})`                          *conflux.setup()*
+  Initialize conflux with optional user config.
+
+`require('conflux').try_attach(bufnr)`                *conflux.try_attach()*
+  Scan `bufnr` for conflicts and attach if found. Called automatically by
+  the `BufReadPost` / `BufWritePost` autocommand.
+
+`require('conflux').detach(bufnr)`                      *conflux.detach()*
+  Remove highlights and keymaps from `bufnr`.
+
+`require('conflux').get_blocks(bufnr)`              *conflux.get_blocks()*
+  Return the cached list of conflict blocks for `bufnr`, or `nil`.
+
+`require('conflux').set_blocks(bufnr, blocks)`      *conflux.set_blocks()*
+  Update the cached blocks. If `blocks` is empty, automatically detaches.
+
+`require('conflux.commands').resolve(bufnr, blocks, type)` *conflux.resolve()*
+  Apply a resolution to the block under the cursor.
+  `type` is one of `'ours'`, `'theirs'`, `'both'`, `'none'`.
+  Returns an updated blocks list.
+
+==============================================================================
+vim:tw=78:ts=8:ft=help:norl:
