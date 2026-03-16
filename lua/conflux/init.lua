@@ -1,0 +1,153 @@
+local M = {}
+
+M._attached = {} -- { [bufnr] = { blocks = list } }
+M._is_setup = false
+
+--- Initialize conflux with user config.
+--- @param user_config table|nil
+function M.setup(user_config)
+	local config = require("conflux.config")
+	local highlight = require("conflux.highlight")
+
+	config.apply(user_config or {})
+	highlight.init()
+
+	M._is_setup = true
+end
+
+--- Return the cached blocks for a buffer, or nil if not attached.
+--- @param bufnr number
+--- @return table|nil
+function M.get_blocks(bufnr)
+	local state = M._attached[bufnr]
+	return state and state.blocks or nil
+end
+
+--- Update the cached blocks for a buffer.
+--- @param bufnr number
+--- @param blocks table
+function M.set_blocks(bufnr, blocks)
+	if M._attached[bufnr] then
+		M._attached[bufnr].blocks = blocks
+	end
+	-- If all conflicts resolved, detach
+	if blocks and #blocks == 0 and M._attached[bufnr] then
+		M.detach(bufnr)
+	end
+end
+
+--- Try to attach conflux to a buffer if it has conflicts.
+--- @param bufnr number
+function M.try_attach(bufnr)
+	if not M._is_setup then
+		return
+	end
+	if not vim.api.nvim_buf_is_valid(bufnr) then
+		return
+	end
+
+	local detect = require("conflux.detect")
+
+	if M._attached[bufnr] then
+		-- Already attached: re-scan in case file changed
+		local blocks, err = detect.scan(bufnr)
+		if err then
+			vim.notify(err, vim.log.levels.ERROR)
+			return
+		end
+		blocks = blocks or {}
+		if #blocks == 0 then
+			M.detach(bufnr)
+		else
+			M._attached[bufnr].blocks = blocks
+			require("conflux.highlight").apply(bufnr, blocks)
+		end
+		return
+	end
+
+	if detect.has_conflicts(bufnr) then
+		M._attach(bufnr)
+	end
+end
+
+--- Attach conflux to a buffer: scan, highlight, and set keymaps.
+--- @param bufnr number
+function M._attach(bufnr)
+	local detect = require("conflux.detect")
+	local highlight = require("conflux.highlight")
+	local config = require("conflux.config")
+
+	local blocks, err = detect.scan(bufnr)
+	if err then
+		vim.notify(err, vim.log.levels.ERROR)
+		return
+	end
+	blocks = blocks or {}
+	if #blocks == 0 then
+		return
+	end
+
+	M._attached[bufnr] = { blocks = blocks }
+	highlight.apply(bufnr, blocks)
+
+	local cfg = config.get()
+
+	if cfg.default_mappings then
+		local actions = {
+			ours = cfg.keymaps.ours,
+			theirs = cfg.keymaps.theirs,
+			both = cfg.keymaps.both,
+			none = cfg.keymaps.none,
+		}
+		for action, key in pairs(actions) do
+			vim.keymap.set("n", key, function()
+				local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
+				local new_blocks = require("conflux.commands").resolve(bufnr, current_blocks, action)
+				M.set_blocks(bufnr, new_blocks or {})
+			end, {
+				buffer = bufnr,
+				desc = "Conflux: apply " .. action,
+			})
+		end
+	end
+
+	-- Auto-detach on buffer delete
+	local augroup = vim.api.nvim_create_augroup("ConfluxBuf" .. bufnr, { clear = true })
+	vim.api.nvim_create_autocmd("BufDelete", {
+		buffer = bufnr,
+		group = augroup,
+		once = true,
+		callback = function()
+			M.detach(bufnr)
+		end,
+	})
+end
+
+--- Detach conflux from a buffer: clear highlights and keymaps.
+--- @param bufnr number
+function M.detach(bufnr)
+	if not M._attached[bufnr] then
+		return
+	end
+
+	local highlight = require("conflux.highlight")
+	highlight.clear(bufnr)
+
+	-- Remove keymaps if they exist
+	local ok, config = pcall(require, "conflux.config")
+	if ok then
+		local cfg_ok, cfg = pcall(config.get)
+		if cfg_ok and cfg.default_mappings then
+			for _, key in pairs(cfg.keymaps) do
+				pcall(vim.keymap.del, "n", key, { buffer = bufnr })
+			end
+		end
+	end
+
+	M._attached[bufnr] = nil
+
+	-- Clean up the per-buffer augroup
+	pcall(vim.api.nvim_del_augroup_by_name, "ConfluxBuf" .. bufnr)
+end
+
+return M
