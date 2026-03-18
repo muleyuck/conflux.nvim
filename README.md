@@ -23,21 +23,53 @@ conflux.nvim automatically detects conflict markers in your files and provides c
 
 ```lua
 {
-  'username/conflux.nvim',
+  'muleyuck/conflux.nvim',
   event = 'BufReadPost',
   opts  = {},   -- use defaults; or pass a config table
 }
+```
+
+### vim-plug
+
+```vim
+Plug 'muleyuck/conflux.nvim'
+```
+
+Then in your `init.lua` (or `lua` block in `init.vim`):
+
+```lua
+require('conflux').setup()
 ```
 
 ### packer.nvim
 
 ```lua
 use {
-  'username/conflux.nvim',
+  'muleyuck/conflux.nvim',
   config = function()
     require('conflux').setup()
   end,
 }
+```
+
+### mini.deps
+
+```lua
+MiniDeps.add('muleyuck/conflux.nvim')
+require('conflux').setup()
+```
+
+### pathogen
+
+```sh
+cd ~/.config/nvim/bundle
+git clone https://github.com/muleyuck/conflux.nvim
+```
+
+Then in your `init.lua`:
+
+```lua
+require('conflux').setup()
 ```
 
 ### Manual
