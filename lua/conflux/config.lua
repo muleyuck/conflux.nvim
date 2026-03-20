@@ -10,7 +10,8 @@ M.defaults = {
     theirs = { bg = '#1a2b4d' },
     theirs_marker = { bg = '#1a3d6b', bold = true },
   },
-  default_mappings = false,
+  default_mappings = true,
+  show_keymap_hints = true,
   keymaps = {
     ours = 'co',
     theirs = 'ct',
