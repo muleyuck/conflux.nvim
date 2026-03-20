@@ -1,6 +1,7 @@
 local M = {}
 
 M._attached = {} -- { [bufnr] = { blocks = list } }
+M._timers   = {} -- { [bufnr] = uv_timer_t }  debounce timers for TextChangedI
 M._is_setup = false
 
 --- Initialize conflux with user config.
@@ -123,25 +124,46 @@ function M._attach(bufnr, blocks)
 		end
 	end
 
-	-- Per-buffer autocommands
-	local augroup = vim.api.nvim_create_augroup("ConfluxBuf" .. bufnr, { clear = true })
+	-- Per-buffer autocommands (two augroups: watch survives detach, buf is cleared on detach)
+	local watch_group = vim.api.nvim_create_augroup("ConfluxBufWatch" .. bufnr, { clear = true })
+	local buf_group   = vim.api.nvim_create_augroup("ConfluxBuf" .. bufnr,      { clear = true })
 
 	-- Re-scan on in-memory text changes (e.g. undo restoring conflict markers)
 	vim.api.nvim_create_autocmd("TextChanged", {
 		buffer = bufnr,
-		group = augroup,
+		group = watch_group,
 		callback = function()
 			M.try_attach(bufnr)
 		end,
 	})
 
-	-- Auto-detach on buffer delete
+	-- Re-scan during insert mode with debounce (150ms) to match VSCode real-time update
+	vim.api.nvim_create_autocmd("TextChangedI", {
+		buffer = bufnr,
+		group = watch_group,
+		callback = function()
+			if M._timers[bufnr] then
+				M._timers[bufnr]:stop()
+				M._timers[bufnr]:close()
+			end
+			local timer = vim.uv.new_timer()
+			M._timers[bufnr] = timer
+			timer:start(150, 0, vim.schedule_wrap(function()
+				timer:close()
+				M._timers[bufnr] = nil
+				M.try_attach(bufnr)
+			end))
+		end,
+	})
+
+	-- Auto-detach and full cleanup on buffer delete
 	vim.api.nvim_create_autocmd("BufDelete", {
 		buffer = bufnr,
-		group = augroup,
+		group = buf_group,
 		once = true,
 		callback = function()
 			M.detach(bufnr)
+			pcall(vim.api.nvim_del_augroup_by_name, "ConfluxBufWatch" .. bufnr)
 		end,
 	})
 end
@@ -169,7 +191,14 @@ function M.detach(bufnr)
 
 	M._attached[bufnr] = nil
 
-	-- Clean up the per-buffer augroup
+	-- Cancel any pending debounce timer
+	if M._timers[bufnr] then
+		M._timers[bufnr]:stop()
+		M._timers[bufnr]:close()
+		M._timers[bufnr] = nil
+	end
+
+	-- Clean up the attached-state augroup (watch augroup is intentionally kept)
 	pcall(vim.api.nvim_del_augroup_by_name, "ConfluxBuf" .. bufnr)
 end
 
