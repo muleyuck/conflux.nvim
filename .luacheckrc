@@ -11,7 +11,7 @@ ignore = {
 
 -- Exclude test fixtures and generated files
 exclude_files = {
-  'tests/fixtures/',
+  'tests/',
 }
 
 read_globals = {
