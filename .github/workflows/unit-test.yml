@@ -1,4 +1,4 @@
-name: lint
+name: unit-test
 on:
   push:
     branches:
@@ -6,6 +6,8 @@ on:
   pull_request:
     branches:
       - main
+permissions:
+  contents: read
 jobs:
   luacheck:
     name: luacheck
@@ -17,16 +19,26 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y luarocks
           sudo luarocks install luacheck
-      - name: Run luacheck
-        run: luacheck lua/ plugin/
+      - run: luacheck lua/ plugin/
   stylua:
     name: stylua
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - name: Install stylua
-        uses: JohnnyMorganz/stylua-action@479972f01e665acfcba96ada452c36608bdbbb5e # v4.1.0
+      - uses: actions/checkout@v6
+      - uses: JohnnyMorganz/stylua-action@479972f01e665acfcba96ada452c36608bdbbb5e
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           version: latest
           args: --check lua/ plugin/
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+      - uses: rhysd/action-setup-vim@febef33995d6649302e9d88dda81e071b68f16a7
+        with:
+          neovim: true
+          version: stable
+      - name: Run tests
+        run: make test
