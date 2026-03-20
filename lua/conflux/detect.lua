@@ -7,8 +7,9 @@ local STATE_ANCESTOR = "ANCESTOR"
 local STATE_THEIRS = "THEIRS"
 
 --- Scan a buffer for conflict blocks.
+--- Malformed or unterminated blocks are silently discarded.
 --- @param bufnr number
---- @return table|nil, string|nil  blocks list or nil, error message or nil
+--- @return table  blocks list (may be empty)
 function M.scan(bufnr)
 	local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
 	local blocks = {}
@@ -38,9 +39,12 @@ function M.scan(bufnr)
 				current.theirs_start = lnum + 1
 				state = STATE_THEIRS
 			elseif vim.startswith(line, "<<<<<<<") then
-				return nil, string.format("conflux: unexpected <<<<<<< at line %d", lnum + 1)
+				-- Nested/malformed: discard current block, start fresh
+				current = { ours_marker = lnum, ours_start = lnum + 1 }
 			elseif vim.startswith(line, ">>>>>>>") then
-				return nil, string.format("conflux: unexpected >>>>>>> at line %d", lnum + 1)
+				-- Malformed: discard current block
+				current = {}
+				state = STATE_IDLE
 			end
 		elseif state == STATE_ANCESTOR then
 			if vim.startswith(line, "=======") then
@@ -49,9 +53,13 @@ function M.scan(bufnr)
 				current.theirs_start = lnum + 1
 				state = STATE_THEIRS
 			elseif vim.startswith(line, "<<<<<<<") then
-				return nil, string.format("conflux: unexpected <<<<<<< at line %d", lnum + 1)
+				-- Malformed: discard current block, start fresh
+				current = { ours_marker = lnum, ours_start = lnum + 1 }
+				state = STATE_OURS
 			elseif vim.startswith(line, ">>>>>>>") then
-				return nil, string.format("conflux: unexpected >>>>>>> at line %d", lnum + 1)
+				-- Malformed: discard current block
+				current = {}
+				state = STATE_IDLE
 			end
 		elseif state == STATE_THEIRS then
 			if vim.startswith(line, ">>>>>>>") then
@@ -61,16 +69,18 @@ function M.scan(bufnr)
 				current = {}
 				state = STATE_IDLE
 			elseif vim.startswith(line, "<<<<<<<") then
-				return nil, string.format("conflux: unexpected <<<<<<< at line %d", lnum + 1)
+				-- Malformed: discard current block, start fresh
+				current = { ours_marker = lnum, ours_start = lnum + 1 }
+				state = STATE_OURS
 			elseif vim.startswith(line, "=======") then
-				return nil, string.format("conflux: unexpected ======= at line %d", lnum + 1)
+				-- Malformed: discard current block
+				current = {}
+				state = STATE_IDLE
 			end
 		end
 	end
 
-	if state ~= STATE_IDLE then
-		return nil, "conflux: unterminated conflict block (missing >>>>>>>)"
-	end
+	-- Unterminated block at EOF: silently discard partial block
 
 	return blocks, nil
 end

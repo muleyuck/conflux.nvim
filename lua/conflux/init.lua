@@ -68,12 +68,7 @@ function M.try_attach(bufnr)
 
 	if M._attached[bufnr] then
 		-- Already attached: re-scan in case file changed
-		local blocks, err = detect.scan(bufnr)
-		if err then
-			vim.notify(err, vim.log.levels.ERROR)
-			return
-		end
-		blocks = blocks or {}
+		local blocks = detect.scan(bufnr)
 		if #blocks == 0 then
 			M.detach(bufnr)
 		else
@@ -83,12 +78,8 @@ function M.try_attach(bufnr)
 		return
 	end
 
-	local blocks, err = detect.scan(bufnr)
-	if err then
-		vim.notify(err, vim.log.levels.ERROR)
-		return
-	end
-	if blocks and #blocks > 0 then
+	local blocks = detect.scan(bufnr)
+	if #blocks > 0 then
 		M._attach(bufnr, blocks)
 	end
 end
