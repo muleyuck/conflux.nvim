@@ -20,18 +20,18 @@ local default_mappings = env('CONFLUX_DEFAULT_MAPPINGS', 'true') ~= 'false'
 require('conflux').setup({
   default_mappings = default_mappings,
   keymaps = {
-    ours   = env('CONFLUX_KEYMAPS_OURS',   'co'),
+    ours = env('CONFLUX_KEYMAPS_OURS', 'co'),
     theirs = env('CONFLUX_KEYMAPS_THEIRS', 'ct'),
-    both   = env('CONFLUX_KEYMAPS_BOTH',   'cb'),
-    none   = env('CONFLUX_KEYMAPS_NONE',   'c0'),
+    both = env('CONFLUX_KEYMAPS_BOTH', 'cb'),
+    none = env('CONFLUX_KEYMAPS_NONE', 'c0'),
   },
   highlights = {
-    ours            = { bg = env('CONFLUX_HL_OURS',            '#2b4d2b') },
-    ours_marker     = { bg = env('CONFLUX_HL_OURS_MARKER',     '#3d6b3d'), bold = true },
-    ancestor        = { bg = env('CONFLUX_HL_ANCESTOR',        '#4d3d1a') },
+    ours = { bg = env('CONFLUX_HL_OURS', '#2b4d2b') },
+    ours_marker = { bg = env('CONFLUX_HL_OURS_MARKER', '#3d6b3d'), bold = true },
+    ancestor = { bg = env('CONFLUX_HL_ANCESTOR', '#4d3d1a') },
     ancestor_marker = { bg = env('CONFLUX_HL_ANCESTOR_MARKER', '#6b5a1a'), bold = true },
-    separator       = { bg = env('CONFLUX_HL_SEPARATOR',       '#3d3d3d'), bold = true },
-    theirs          = { bg = env('CONFLUX_HL_THEIRS',          '#1a2b4d') },
-    theirs_marker   = { bg = env('CONFLUX_HL_THEIRS_MARKER',   '#1a3d6b'), bold = true },
+    separator = { bg = env('CONFLUX_HL_SEPARATOR', '#3d3d3d'), bold = true },
+    theirs = { bg = env('CONFLUX_HL_THEIRS', '#1a2b4d') },
+    theirs_marker = { bg = env('CONFLUX_HL_THEIRS_MARKER', '#1a3d6b'), bold = true },
   },
 })

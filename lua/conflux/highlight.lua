@@ -4,13 +4,13 @@ M._ns_id = nil
 M._hl_defined = false
 
 local HL_GROUPS = {
-  ours_marker     = 'ConfluxOursMarker',
-  ours            = 'ConfluxOurs',
+  ours_marker = 'ConfluxOursMarker',
+  ours = 'ConfluxOurs',
   ancestor_marker = 'ConfluxAncestorMarker',
-  ancestor        = 'ConfluxAncestor',
-  separator       = 'ConfluxSeparator',
-  theirs          = 'ConfluxTheirs',
-  theirs_marker   = 'ConfluxTheirsMarker',
+  ancestor = 'ConfluxAncestor',
+  separator = 'ConfluxSeparator',
+  theirs = 'ConfluxTheirs',
+  theirs_marker = 'ConfluxTheirsMarker',
 }
 
 --- Initialize the namespace. Must be called before apply/clear.
@@ -24,19 +24,23 @@ end
 --- Define (or redefine) highlight groups from config. Idempotent.
 function M._define_highlights()
   local ok, config = pcall(require, 'conflux.config')
-  if not ok then return end
+  if not ok then
+    return
+  end
   local cfg_ok, cfg = pcall(config.get)
-  if not cfg_ok then return end
+  if not cfg_ok then
+    return
+  end
   local hls = cfg.highlights
 
   local map = {
-    ours_marker     = HL_GROUPS.ours_marker,
-    ours            = HL_GROUPS.ours,
+    ours_marker = HL_GROUPS.ours_marker,
+    ours = HL_GROUPS.ours,
     ancestor_marker = HL_GROUPS.ancestor_marker,
-    ancestor        = HL_GROUPS.ancestor,
-    separator       = HL_GROUPS.separator,
-    theirs          = HL_GROUPS.theirs,
-    theirs_marker   = HL_GROUPS.theirs_marker,
+    ancestor = HL_GROUPS.ancestor,
+    separator = HL_GROUPS.separator,
+    theirs = HL_GROUPS.theirs,
+    theirs_marker = HL_GROUPS.theirs_marker,
   }
 
   for key, group in pairs(map) do
@@ -52,7 +56,9 @@ end
 --- @param bufnr number
 --- @param blocks table
 function M.apply(bufnr, blocks)
-  if not M._ns_id then return end
+  if not M._ns_id then
+    return
+  end
   M.clear(bufnr)
 
   for _, block in ipairs(blocks) do
@@ -92,10 +98,10 @@ end
 --- @param hl_group string
 function M._mark_lines(bufnr, start_row, end_row, hl_group)
   vim.api.nvim_buf_set_extmark(bufnr, M._ns_id, start_row, 0, {
-    end_row  = end_row,
-    end_col  = 0,
+    end_row = end_row,
+    end_col = 0,
     hl_group = hl_group,
-    hl_eol   = true,
+    hl_eol = true,
     priority = 100,
   })
 end
@@ -114,7 +120,9 @@ end
 --- Clear all conflux extmarks from a buffer.
 --- @param bufnr number
 function M.clear(bufnr)
-  if not M._ns_id then return end
+  if not M._ns_id then
+    return
+  end
   vim.api.nvim_buf_clear_namespace(bufnr, M._ns_id, 0, -1)
 end
 
