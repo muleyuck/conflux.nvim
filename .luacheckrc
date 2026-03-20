@@ -1,3 +1,4 @@
+---@diagnostic disable: lowercase-global
 max_comment_line_length = false
 codes = true
 
