@@ -185,6 +185,7 @@ conflux defines these highlight groups (override them after `setup()`):
 4. The buffer is immediately re-scanned and highlights are updated.
 5. When the last conflict is resolved, highlights and keymaps are removed.
 
-## License
 
-MIT
+## LICENCE
+
+[The MIT Licence](https://github.com/muleyuck/conflux.nvim/blob/main/LICENSE)
