@@ -11,6 +11,7 @@ local HL_GROUPS = {
   separator = 'ConfluxSeparator',
   theirs = 'ConfluxTheirs',
   theirs_marker = 'ConfluxTheirsMarker',
+  keymap_hint = 'ConfluxKeymapHint',
 }
 
 --- Initialize the namespace. Must be called before apply/clear.
@@ -49,7 +50,36 @@ function M._define_highlights()
     end
   end
 
+  -- keymap_hint bg must match ours_marker bg so that right_align virt_text
+  -- characters are rendered on the same background as the marker line.
+  -- hl_eol fills the empty space but does NOT apply under virt_text characters.
+  if hls.keymap_hint then
+    vim.api.nvim_set_hl(
+      0,
+      HL_GROUPS.keymap_hint,
+      vim.tbl_extend('force', hls.keymap_hint, { bg = (hls.ours_marker or {}).bg })
+    )
+  end
+
   M._hl_defined = true
+end
+
+--- Set a line highlight and a right-aligned virtual text hint in a single extmark.
+--- Using one extmark ensures the hl_eol background extends over the virtual text area.
+--- @param bufnr number
+--- @param row number     0-indexed
+--- @param hl_group string
+--- @param text string
+function M._mark_line_with_hint(bufnr, row, hl_group, text)
+  vim.api.nvim_buf_set_extmark(bufnr, M._ns_id, row, 0, {
+    end_row = row + 1,
+    end_col = 0,
+    hl_group = hl_group,
+    hl_eol = true,
+    virt_text = { { text, HL_GROUPS.keymap_hint } },
+    virt_text_pos = 'right_align',
+    priority = 100,
+  })
 end
 
 --- Apply extmark highlights for all conflict blocks in a buffer.
@@ -61,9 +91,28 @@ function M.apply(bufnr, blocks)
   end
   M.clear(bufnr)
 
+  local hint_text
+  local ok, config = pcall(require, 'conflux.config')
+  if ok then
+    local cfg_ok, cfg = pcall(config.get)
+    if cfg_ok and cfg.show_keymap_hints then
+      local km = cfg.keymaps
+      hint_text = ('ours(%s) | theirs(%s) | both(%s) | none(%s)'):format(
+        km.ours,
+        km.theirs,
+        km.both,
+        km.none
+      )
+    end
+  end
+
   for _, block in ipairs(blocks) do
-    -- <<<<<<< marker line
-    M._mark_lines(bufnr, block.ours_marker, block.ours_marker + 1, HL_GROUPS.ours_marker)
+    -- <<<<<<< marker line (combined with hint if available)
+    if hint_text then
+      M._mark_line_with_hint(bufnr, block.ours_marker, HL_GROUPS.ours_marker, hint_text)
+    else
+      M._mark_lines(bufnr, block.ours_marker, block.ours_marker + 1, HL_GROUPS.ours_marker)
+    end
 
     -- ours content lines
     if block.ours_start <= block.ours_end - 1 then

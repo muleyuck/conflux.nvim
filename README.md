@@ -10,6 +10,7 @@ conflux.nvim automatically detects conflict markers in your files and provides c
 - Full-line background highlights (VSCode style, using `hl_eol`)
 - diff3 support: `|||||||` ancestor sections highlighted in a distinct color
 - Buffer-local keymaps set automatically when a conflict file is opened
+- Right-aligned keymap hint shown on each `<<<<<<<` marker line (`ours(co) | theirs(ct) | both(cb) | none(c0)`)
 - Highlights restored after colorscheme changes
 - Auto-detach when all conflicts are resolved
 
@@ -97,10 +98,14 @@ require('conflux').setup({
     separator        = { bg = '#3d3d3d', bold = true },
     theirs           = { bg = '#1a2b4d' },
     theirs_marker    = { bg = '#1a3d6b', bold = true },
+    keymap_hint      = { fg = '#99bb99' },    -- virtual text hint on <<<<<<< line
   },
 
   -- Set false to disable the default buffer-local keymaps
   default_mappings = true,
+
+  -- Set false to hide the right-aligned keymap hint on each <<<<<<< marker line
+  show_keymap_hints = true,
 
   -- Keys for the default mappings
   keymaps = {
@@ -173,6 +178,7 @@ conflux defines these highlight groups (override them after `setup()`):
 | `ConfluxSeparator`     | `=======` separator line              |
 | `ConfluxTheirs`        | Theirs (incoming) content lines       |
 | `ConfluxTheirsMarker`  | `>>>>>>>` marker line                 |
+| `ConfluxKeymapHint`    | Right-aligned keymap hint virtual text|
 
 ## How it works
 

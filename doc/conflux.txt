@@ -28,6 +28,7 @@ Features:
   - Color-coded extmark highlights for ours, theirs, and (diff3) ancestor
   - Commands and keymaps: ours / theirs / both / none
   - diff3 support (`|||||||` ancestor section)
+  - Right-aligned keymap hint on each `<<<<<<<` marker line
   - Highlight restoration on colorscheme change
 
 ==============================================================================
@@ -68,10 +69,14 @@ Pass a table to `setup()`. All keys are optional. >lua
       separator        = { bg = '#3d3d3d', bold = true },
       theirs           = { bg = '#1a2b4d' },
       theirs_marker    = { bg = '#1a3d6b', bold = true },
+      keymap_hint      = { fg = '#99bb99' },   -- virtual text hint on <<<<<<< line
     },
 
     -- Set false to disable default buffer-local keymaps
     default_mappings = true,
+
+    -- Set false to hide the right-aligned keymap hint on <<<<<<< marker lines
+    show_keymap_hints = true,
 
     -- Keys used for default_mappings (ignored when default_mappings = false)
     keymaps = {
@@ -140,6 +145,7 @@ conflux defines the following highlight groups. Override them after `setup()`:
   *ConfluxSeparator*      Background for the `=======` separator line
   *ConfluxTheirs*         Background for theirs (incoming) content lines
   *ConfluxTheirsMarker*   Background for the `>>>>>>>` marker line
+  *ConfluxKeymapHint*     Color for the right-aligned keymap hint virtual text
 
 Example override: >lua
 

@@ -9,6 +9,7 @@ M.defaults = {
     separator = { bg = '#3d3d3d', bold = true },
     theirs = { bg = '#1a2b4d' },
     theirs_marker = { bg = '#1a3d6b', bold = true },
+    keymap_hint = { fg = '#99bb99' },
   },
   default_mappings = true,
   show_keymap_hints = true,
