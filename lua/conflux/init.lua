@@ -15,6 +15,22 @@ function M.setup(user_config)
 	M._is_setup = true
 end
 
+--- Return whether setup() has been called.
+--- @return boolean
+function M.is_setup()
+	return M._is_setup
+end
+
+--- Handle ColorScheme change: redefine highlights and re-apply to all attached buffers.
+function M.on_colorscheme()
+	local hl = require("conflux.highlight")
+	if not hl.is_initialized() then return end
+	hl.redefine_highlights()
+	for bufnr, state in pairs(M._attached) do
+		hl.apply(bufnr, state.blocks)
+	end
+end
+
 --- Return the cached blocks for a buffer, or nil if not attached.
 --- @param bufnr number
 --- @return table|nil
@@ -27,11 +43,12 @@ end
 --- @param bufnr number
 --- @param blocks table
 function M.set_blocks(bufnr, blocks)
+	blocks = blocks or {}
 	if M._attached[bufnr] then
 		M._attached[bufnr].blocks = blocks
 	end
 	-- If all conflicts resolved, detach
-	if blocks and #blocks == 0 and M._attached[bufnr] then
+	if #blocks == 0 and M._attached[bufnr] then
 		M.detach(bufnr)
 	end
 end
@@ -65,27 +82,22 @@ function M.try_attach(bufnr)
 		return
 	end
 
-	if detect.has_conflicts(bufnr) then
-		M._attach(bufnr)
-	end
-end
-
---- Attach conflux to a buffer: scan, highlight, and set keymaps.
---- @param bufnr number
-function M._attach(bufnr)
-	local detect = require("conflux.detect")
-	local highlight = require("conflux.highlight")
-	local config = require("conflux.config")
-
 	local blocks, err = detect.scan(bufnr)
 	if err then
 		vim.notify(err, vim.log.levels.ERROR)
 		return
 	end
-	blocks = blocks or {}
-	if #blocks == 0 then
-		return
+	if blocks and #blocks > 0 then
+		M._attach(bufnr, blocks)
 	end
+end
+
+--- Attach conflux to a buffer: highlight and set keymaps.
+--- @param bufnr number
+--- @param blocks table  pre-scanned conflict blocks (non-empty)
+function M._attach(bufnr, blocks)
+	local highlight = require("conflux.highlight")
+	local config = require("conflux.config")
 
 	M._attached[bufnr] = { blocks = blocks }
 	highlight.apply(bufnr, blocks)
@@ -111,8 +123,19 @@ function M._attach(bufnr)
 		end
 	end
 
-	-- Auto-detach on buffer delete
+	-- Per-buffer autocommands
 	local augroup = vim.api.nvim_create_augroup("ConfluxBuf" .. bufnr, { clear = true })
+
+	-- Re-scan on in-memory text changes (e.g. undo restoring conflict markers)
+	vim.api.nvim_create_autocmd("TextChanged", {
+		buffer = bufnr,
+		group = augroup,
+		callback = function()
+			M.try_attach(bufnr)
+		end,
+	})
+
+	-- Auto-detach on buffer delete
 	vim.api.nvim_create_autocmd("BufDelete", {
 		buffer = bufnr,
 		group = augroup,

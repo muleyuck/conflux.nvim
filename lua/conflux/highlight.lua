@@ -25,7 +25,8 @@ end
 function M._define_highlights()
   local ok, config = pcall(require, 'conflux.config')
   if not ok then return end
-  local cfg = config.get()
+  local cfg_ok, cfg = pcall(config.get)
+  if not cfg_ok then return end
   local hls = cfg.highlights
 
   local map = {
@@ -97,6 +98,17 @@ function M._mark_lines(bufnr, start_row, end_row, hl_group)
     hl_eol   = true,
     priority = 100,
   })
+end
+
+--- Return whether the namespace has been initialized.
+--- @return boolean
+function M.is_initialized()
+  return M._ns_id ~= nil
+end
+
+--- Redefine highlight groups (public entry point for colorscheme changes).
+function M.redefine_highlights()
+  M._define_highlights()
 end
 
 --- Clear all conflux extmarks from a buffer.

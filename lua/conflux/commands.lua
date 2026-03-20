@@ -58,7 +58,9 @@ function M.resolve(bufnr, blocks, resolution)
 		return blocks
 	end
 
-	local cursor = vim.api.nvim_win_get_cursor(0)
+	local winid = vim.fn.bufwinid(bufnr)
+	if winid == -1 then winid = 0 end
+	local cursor = vim.api.nvim_win_get_cursor(winid)
 	local lnum = cursor[1] - 1 -- convert to 0-indexed
 
 	local detect = require("conflux.detect")
@@ -89,7 +91,7 @@ function M.resolve(bufnr, blocks, resolution)
 	if target_row < 1 then
 		target_row = 1
 	end
-	vim.api.nvim_win_set_cursor(0, { target_row, 0 })
+	vim.api.nvim_win_set_cursor(winid, { target_row, 0 })
 
 	-- Re-scan and re-highlight after the edit
 	return M._refresh(bufnr)

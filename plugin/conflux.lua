@@ -10,18 +10,7 @@ vim.api.nvim_create_autocmd({ "BufReadPost", "BufWritePost" }, {
 	group = augroup,
 	callback = function(ev)
 		local ok, conflux = pcall(require, "conflux")
-		if ok and conflux._is_setup then
-			conflux.try_attach(ev.buf)
-		end
-	end,
-})
-
--- Re-detect on in-memory text changes (e.g. undo restoring conflict markers)
-vim.api.nvim_create_autocmd("TextChanged", {
-	group = augroup,
-	callback = function(ev)
-		local ok, conflux = pcall(require, "conflux")
-		if ok and conflux._is_setup then
+		if ok and conflux.is_setup() then
 			conflux.try_attach(ev.buf)
 		end
 	end,
@@ -31,16 +20,9 @@ vim.api.nvim_create_autocmd("TextChanged", {
 vim.api.nvim_create_autocmd("ColorScheme", {
 	group = augroup,
 	callback = function()
-		local ok, hl = pcall(require, "conflux.highlight")
-		if not ok or not hl._ns_id then
-			return
-		end
-		hl._define_highlights()
-		local ok2, conflux = pcall(require, "conflux")
-		if ok2 then
-			for bufnr, state in pairs(conflux._attached) do
-				hl.apply(bufnr, state.blocks)
-			end
+		local ok, conflux = pcall(require, "conflux")
+		if ok and conflux.is_setup() then
+			conflux.on_colorscheme()
 		end
 	end,
 })
