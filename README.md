@@ -10,7 +10,7 @@ conflux.nvim automatically detects conflict markers in your files and provides c
 - Full-line background highlights (VSCode style, using `hl_eol`)
 - diff3 support: `|||||||` ancestor sections highlighted in a distinct color
 - Buffer-local keymaps set automatically when a conflict file is opened
-- Right-aligned keymap hint shown on each `<<<<<<<` marker line (`ours(co) | theirs(ct) | both(cb) | none(c0)`)
+- Right-aligned keymap hint shown on each `<<<<<<<` marker line (`ours(co) | theirs(ct) | both(cb) | none(cz)`)
 - Highlights restored after colorscheme changes
 - Auto-detach when all conflicts are resolved
 
@@ -112,7 +112,7 @@ require('conflux').setup({
     ours   = 'co',
     theirs = 'ct',
     both   = 'cb',
-    none   = 'c0',
+    none   = 'cz',
   },
 })
 ```
@@ -148,7 +148,7 @@ When a conflict file is opened, conflux sets buffer-local normal-mode keymaps:
 | `co` | Accept ours (`:ConfluxOurs`)   |
 | `ct` | Accept theirs (`:ConfluxTheirs`)|
 | `cb` | Accept both (`:ConfluxBoth`)   |
-| `c0` | Accept none (`:ConfluxNone`)   |
+| `cz` | Accept none (`:ConfluxNone`)   |
 
 > **Note:** `co` and `ct` are two-key sequences that share the `c` prefix with
 > Vim's built-in change operator. This causes a brief timeout delay when typing
@@ -162,7 +162,7 @@ require('conflux').setup({ default_mappings = false })
 vim.keymap.set('n', '<leader>co', '<Cmd>ConfluxOurs<CR>')
 vim.keymap.set('n', '<leader>ct', '<Cmd>ConfluxTheirs<CR>')
 vim.keymap.set('n', '<leader>cb', '<Cmd>ConfluxBoth<CR>')
-vim.keymap.set('n', '<leader>c0', '<Cmd>ConfluxNone<CR>')
+vim.keymap.set('n', '<leader>cz', '<Cmd>ConfluxNone<CR>')
 ```
 
 ## Highlights

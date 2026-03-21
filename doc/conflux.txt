@@ -83,7 +83,7 @@ Pass a table to `setup()`. All keys are optional. >lua
       ours   = 'co',
       theirs = 'ct',
       both   = 'cb',
-      none   = 'c0',
+      none   = 'cz',
     },
   })
 <
@@ -114,7 +114,7 @@ Default buffer-local normal-mode keymaps (set when a conflict file is opened):
   co     Accept ours   (equivalent to :ConfluxOurs)
   ct     Accept theirs (equivalent to :ConfluxTheirs)
   cb     Accept both   (equivalent to :ConfluxBoth)
-  c0     Accept none   (equivalent to :ConfluxNone)
+  cz     Accept none   (equivalent to :ConfluxNone)
 
 To use custom keys, set `default_mappings = false` and define your own: >lua
 
@@ -126,7 +126,7 @@ To use custom keys, set `default_mappings = false` and define your own: >lua
   vim.keymap.set('n', '<leader>co', '<Cmd>ConfluxOurs<CR>')
   vim.keymap.set('n', '<leader>ct', '<Cmd>ConfluxTheirs<CR>')
   vim.keymap.set('n', '<leader>cb', '<Cmd>ConfluxBoth<CR>')
-  vim.keymap.set('n', '<leader>c0', '<Cmd>ConfluxNone<CR>')
+  vim.keymap.set('n', '<leader>cz', '<Cmd>ConfluxNone<CR>')
 <
 
 NOTE: `co` and `ct` as two-key sequences may momentarily delay Vim's

@@ -99,4 +99,35 @@ function M.resolve(bufnr, blocks, resolution)
   return M._refresh(bufnr)
 end
 
+--- Resolve all conflict blocks in the buffer with the given resolution.
+--- Processes blocks in reverse order to avoid line-number drift.
+--- @param bufnr number
+--- @param blocks table
+--- @param resolution string  'ours'|'theirs'|'both'|'none'
+--- @return table  updated blocks after resolution
+function M.resolve_all(bufnr, blocks, resolution)
+  if not vim.bo[bufnr].modifiable then
+    vim.notify('conflux: buffer is not modifiable', vim.log.levels.WARN)
+    return blocks
+  end
+  if #blocks == 0 then
+    vim.notify('conflux: no conflicts in buffer', vim.log.levels.INFO)
+    return blocks
+  end
+
+  -- Wrap all replacements in a single undo operation.
+  -- undojoin must be called before each buf_set_lines to chain them all together:
+  --   - 1st call may fail (no prior change) → first replacement starts a new undo block
+  --   - 2nd+ calls succeed → each change merges with the previous
+  -- Result: all replacements belong to one undo block.
+  for i = #blocks, 1, -1 do
+    pcall(vim.cmd, 'undojoin')
+    local block = blocks[i]
+    local lines = M._get_replacement(bufnr, block, resolution)
+    vim.api.nvim_buf_set_lines(bufnr, block.ours_marker, block.their_marker + 1, false, lines)
+  end
+
+  return M._refresh(bufnr)
+end
+
 return M

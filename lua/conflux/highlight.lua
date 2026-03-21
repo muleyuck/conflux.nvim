@@ -12,6 +12,7 @@ local HL_GROUPS = {
   theirs = 'ConfluxTheirs',
   theirs_marker = 'ConfluxTheirsMarker',
   keymap_hint = 'ConfluxKeymapHint',
+  all_keymap_hint = 'ConfluxAllKeymapHint',
 }
 
 --- Initialize the namespace. Must be called before apply/clear.
@@ -50,7 +51,7 @@ function M._define_highlights()
     end
   end
 
-  -- keymap_hint bg must match ours_marker bg so that right_align virt_text
+  -- keymap_hint bg must match the marker line bg so that right_align virt_text
   -- characters are rendered on the same background as the marker line.
   -- hl_eol fills the empty space but does NOT apply under virt_text characters.
   if hls.keymap_hint then
@@ -60,6 +61,13 @@ function M._define_highlights()
       vim.tbl_extend('force', hls.keymap_hint, { bg = (hls.ours_marker or {}).bg })
     )
   end
+  if hls.all_keymap_hint then
+    vim.api.nvim_set_hl(
+      0,
+      HL_GROUPS.all_keymap_hint,
+      vim.tbl_extend('force', hls.all_keymap_hint, { bg = (hls.theirs_marker or {}).bg })
+    )
+  end
 
   M._hl_defined = true
 end
@@ -67,16 +75,17 @@ end
 --- Set a line highlight and a right-aligned virtual text hint in a single extmark.
 --- Using one extmark ensures the hl_eol background extends over the virtual text area.
 --- @param bufnr number
---- @param row number     0-indexed
+--- @param row number       0-indexed
 --- @param hl_group string
 --- @param text string
-function M._mark_line_with_hint(bufnr, row, hl_group, text)
+--- @param hint_hl string?  highlight group for the virt_text (defaults to keymap_hint)
+function M._mark_line_with_hint(bufnr, row, hl_group, text, hint_hl)
   vim.api.nvim_buf_set_extmark(bufnr, M._ns_id, row, 0, {
     end_row = row + 1,
     end_col = 0,
     hl_group = hl_group,
     hl_eol = true,
-    virt_text = { { text, HL_GROUPS.keymap_hint } },
+    virt_text = { { text, hint_hl or HL_GROUPS.keymap_hint } },
     virt_text_pos = 'right_align',
     priority = 100,
   })
@@ -92,6 +101,7 @@ function M.apply(bufnr, blocks)
   M.clear(bufnr)
 
   local hint_text
+  local all_hint_text
   local ok, config = pcall(require, 'conflux.config')
   if ok then
     local cfg_ok, cfg = pcall(config.get)
@@ -102,6 +112,13 @@ function M.apply(bufnr, blocks)
         km.theirs,
         km.both,
         km.none
+      )
+      local akm = cfg.all_keymaps
+      all_hint_text = ('All: ours(%s) | theirs(%s) | both(%s) | none(%s)'):format(
+        akm.ours,
+        akm.theirs,
+        akm.both,
+        akm.none
       )
     end
   end
@@ -135,8 +152,12 @@ function M.apply(bufnr, blocks)
       M._mark_lines(bufnr, block.theirs_start, block.theirs_end, HL_GROUPS.theirs)
     end
 
-    -- >>>>>>> marker line
-    M._mark_lines(bufnr, block.their_marker, block.their_marker + 1, HL_GROUPS.theirs_marker)
+    -- >>>>>>> marker line (combined with all-keymaps hint if available)
+    if all_hint_text then
+      M._mark_line_with_hint(bufnr, block.their_marker, HL_GROUPS.theirs_marker, all_hint_text, HL_GROUPS.all_keymap_hint)
+    else
+      M._mark_lines(bufnr, block.their_marker, block.their_marker + 1, HL_GROUPS.theirs_marker)
+    end
   end
 end
 

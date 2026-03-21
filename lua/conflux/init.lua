@@ -99,13 +99,7 @@ function M._attach(bufnr, blocks)
   local cfg = config.get()
 
   if cfg.default_mappings then
-    local actions = {
-      ours = cfg.keymaps.ours,
-      theirs = cfg.keymaps.theirs,
-      both = cfg.keymaps.both,
-      none = cfg.keymaps.none,
-    }
-    for action, key in pairs(actions) do
+    for action, key in pairs(cfg.keymaps) do
       vim.keymap.set('n', key, function()
         local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
         local new_blocks = require('conflux.commands').resolve(bufnr, current_blocks, action)
@@ -113,6 +107,17 @@ function M._attach(bufnr, blocks)
       end, {
         buffer = bufnr,
         desc = 'Conflux: apply ' .. action,
+      })
+    end
+
+    for action, key in pairs(cfg.all_keymaps) do
+      vim.keymap.set('n', key, function()
+        local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
+        local new_blocks = require('conflux.commands').resolve_all(bufnr, current_blocks, action)
+        M.set_blocks(bufnr, new_blocks or {})
+      end, {
+        buffer = bufnr,
+        desc = 'Conflux: apply all ' .. action,
       })
     end
   end
@@ -181,6 +186,9 @@ function M.detach(bufnr)
     local cfg_ok, cfg = pcall(config.get)
     if cfg_ok and cfg.default_mappings then
       for _, key in pairs(cfg.keymaps) do
+        pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+      end
+      for _, key in pairs(cfg.all_keymaps) do
         pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
       end
     end

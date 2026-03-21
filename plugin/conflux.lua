@@ -28,7 +28,8 @@ vim.api.nvim_create_autocmd('ColorScheme', {
 })
 
 -- Helper to build command callbacks
-local function make_cmd(action)
+local function make_cmd(action, method)
+  method = method or 'resolve'
   return function()
     local ok, conflux = pcall(require, 'conflux')
     if not ok then
@@ -41,7 +42,7 @@ local function make_cmd(action)
       vim.notify('conflux: no conflicts tracked in this buffer', vim.log.levels.WARN)
       return
     end
-    local new_blocks = require('conflux.commands').resolve(bufnr, blocks, action)
+    local new_blocks = require('conflux.commands')[method](bufnr, blocks, action)
     conflux.set_blocks(bufnr, new_blocks or {})
   end
 end
@@ -62,3 +63,24 @@ vim.api.nvim_create_user_command(
   { desc = 'Keep both changes (ours first)' }
 )
 vim.api.nvim_create_user_command('ConfluxNone', make_cmd('none'), { desc = 'Discard both changes' })
+
+vim.api.nvim_create_user_command(
+  'ConfluxAllOurs',
+  make_cmd('ours', 'resolve_all'),
+  { desc = 'Keep ours (current) changes in all conflicts' }
+)
+vim.api.nvim_create_user_command(
+  'ConfluxAllTheirs',
+  make_cmd('theirs', 'resolve_all'),
+  { desc = 'Keep theirs (incoming) changes in all conflicts' }
+)
+vim.api.nvim_create_user_command(
+  'ConfluxAllBoth',
+  make_cmd('both', 'resolve_all'),
+  { desc = 'Keep both changes in all conflicts (ours first)' }
+)
+vim.api.nvim_create_user_command(
+  'ConfluxAllNone',
+  make_cmd('none', 'resolve_all'),
+  { desc = 'Discard both changes in all conflicts' }
+)

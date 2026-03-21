@@ -10,6 +10,7 @@ M.defaults = {
     theirs = { bg = '#1a2b4d' },
     theirs_marker = { bg = '#1a3d6b', bold = true },
     keymap_hint = { fg = '#99bb99' },
+    all_keymap_hint = { fg = '#99aacc' },
   },
   default_mappings = true,
   show_keymap_hints = true,
@@ -17,7 +18,13 @@ M.defaults = {
     ours = 'co',
     theirs = 'ct',
     both = 'cb',
-    none = 'c0',
+    none = 'cz',
+  },
+  all_keymaps = {
+    ours   = 'cO',
+    theirs = 'cT',
+    both   = 'cB',
+    none   = 'cZ',
   },
 }
 
