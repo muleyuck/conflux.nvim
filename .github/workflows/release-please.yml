@@ -26,5 +26,5 @@ jobs:
       - name: Update stable tag
         if: ${{ steps.release.outputs.release_created }}
         run: |
-          git tag -fa stable "${{ steps.release.outputs.tag_name }}" -m "Current stable release: ${{ steps.release.outputs.tag_name }}"
+          git tag -fa stable "${{ steps.release.outputs.sha }}" -m "Current stable release: ${{ steps.release.outputs.tag_name }}"
           git push origin stable --force
