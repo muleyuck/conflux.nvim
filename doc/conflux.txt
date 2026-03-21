@@ -26,7 +26,9 @@ with distinct colors and provides commands to quickly accept one side.
 Features:
   - Automatic detection of conflict markers on `BufReadPost` / `BufWritePost`
   - Color-coded extmark highlights for ours, theirs, and (diff3) ancestor
-  - Commands and keymaps: ours / theirs / both / none
+  - Per-block commands and keymaps: ours / theirs / both / none
+  - Resolve-all commands/keymaps to apply a choice to every conflict at once
+  - Navigation keymaps ]c / [c to jump between conflict blocks
   - diff3 support (`|||||||` ancestor section)
   - Right-aligned keymap hint on each `<<<<<<<` marker line
   - Highlight restoration on colorscheme change
@@ -43,7 +45,7 @@ Call `require('conflux').setup()` somewhere in your config (e.g. init.lua).
 With lazy.nvim: >lua
 
   {
-    'username/conflux.nvim',
+    'muleyuck/conflux.nvim',
     event = 'BufReadPost',
     opts  = {},   -- calls setup() with an empty table (all defaults)
   }
@@ -70,6 +72,7 @@ Pass a table to `setup()`. All keys are optional. >lua
       theirs           = { bg = '#1a2b4d' },
       theirs_marker    = { bg = '#1a3d6b', bold = true },
       keymap_hint      = { fg = '#99bb99' },   -- virtual text hint on <<<<<<< line
+      all_keymap_hint  = { fg = '#99aacc' },   -- virtual text hint on >>>>>>> line
     },
 
     -- Set false to disable default buffer-local keymaps
@@ -78,12 +81,26 @@ Pass a table to `setup()`. All keys are optional. >lua
     -- Set false to hide the right-aligned keymap hint on <<<<<<< marker lines
     show_keymap_hints = true,
 
-    -- Keys used for default_mappings (ignored when default_mappings = false)
+    -- Keys used for default per-block mappings (ignored when default_mappings = false)
     keymaps = {
       ours   = 'co',
       theirs = 'ct',
       both   = 'cb',
       none   = 'cz',
+    },
+
+    -- Keys for resolve-all mappings (apply choice to entire buffer at once)
+    all_keymaps = {
+      ours   = 'cO',
+      theirs = 'cT',
+      both   = 'cB',
+      none   = 'cZ',
+    },
+
+    -- Keys for navigating between conflict blocks
+    nav_keymaps = {
+      next = ']c',
+      prev = '[c',
     },
   })
 <
@@ -94,12 +111,24 @@ conflict with Vim's built-in `c` (change) operator. See |conflux-keymaps|.
 ==============================================================================
 5. Commands                                                *conflux-commands*
 
-All commands operate on the conflict block under the cursor.
+Per-block commands (operate on the conflict block under the cursor):
 
   *:ConfluxOurs*    Keep the HEAD (ours) changes; discard theirs.
   *:ConfluxTheirs*  Keep the incoming (theirs) changes; discard ours.
   *:ConfluxBoth*    Keep both changes (ours first, then theirs).
   *:ConfluxNone*    Discard both sides (delete the entire block).
+
+Resolve-all commands (apply a choice to every conflict in the buffer):
+
+  *:ConfluxAllOurs*    Keep ours in every conflict block.
+  *:ConfluxAllTheirs*  Keep theirs in every conflict block.
+  *:ConfluxAllBoth*    Keep both in every conflict block (ours first).
+  *:ConfluxAllNone*    Discard both sides in every conflict block.
+
+Navigation commands:
+
+  *:ConfluxNext*    Jump to the next conflict block.
+  *:ConfluxPrev*    Jump to the previous conflict block.
 
 After applying a resolution, the conflict markers are removed and the buffer
 is re-scanned. When all conflicts are resolved, highlights are cleared.
@@ -109,12 +138,27 @@ is re-scanned. When all conflicts are resolved, highlights are cleared.
 
 Default buffer-local normal-mode keymaps (set when a conflict file is opened):
 
+Per-block:
   Key    Action
   ------+-----------------------------------------------
   co     Accept ours   (equivalent to :ConfluxOurs)
   ct     Accept theirs (equivalent to :ConfluxTheirs)
   cb     Accept both   (equivalent to :ConfluxBoth)
   cz     Accept none   (equivalent to :ConfluxNone)
+
+Resolve-all:
+  Key    Action
+  ------+-----------------------------------------------
+  cO     Accept ours in all   (equivalent to :ConfluxAllOurs)
+  cT     Accept theirs in all (equivalent to :ConfluxAllTheirs)
+  cB     Accept both in all   (equivalent to :ConfluxAllBoth)
+  cZ     Accept none in all   (equivalent to :ConfluxAllNone)
+
+Navigation:
+  Key    Action
+  ------+-----------------------------------------------
+  ]c     Jump to next conflict    (equivalent to :ConfluxNext)
+  [c     Jump to previous conflict (equivalent to :ConfluxPrev)
 
 To use custom keys, set `default_mappings = false` and define your own: >lua
 
@@ -127,6 +171,8 @@ To use custom keys, set `default_mappings = false` and define your own: >lua
   vim.keymap.set('n', '<leader>ct', '<Cmd>ConfluxTheirs<CR>')
   vim.keymap.set('n', '<leader>cb', '<Cmd>ConfluxBoth<CR>')
   vim.keymap.set('n', '<leader>cz', '<Cmd>ConfluxNone<CR>')
+  vim.keymap.set('n', ']c', '<Cmd>ConfluxNext<CR>')
+  vim.keymap.set('n', '[c', '<Cmd>ConfluxPrev<CR>')
 <
 
 NOTE: `co` and `ct` as two-key sequences may momentarily delay Vim's
@@ -145,7 +191,8 @@ conflux defines the following highlight groups. Override them after `setup()`:
   *ConfluxSeparator*      Background for the `=======` separator line
   *ConfluxTheirs*         Background for theirs (incoming) content lines
   *ConfluxTheirsMarker*   Background for the `>>>>>>>` marker line
-  *ConfluxKeymapHint*     Color for the right-aligned keymap hint virtual text
+  *ConfluxKeymapHint*     Color for the right-aligned keymap hint on `<<<<<<<` line
+  *ConfluxAllKeymapHint*  Color for the right-aligned resolve-all hint on `>>>>>>>` line
 
 Example override: >lua
 
@@ -177,6 +224,19 @@ Highlights are re-applied automatically on `ColorScheme` changes.
   Apply a resolution to the block under the cursor.
   `type` is one of `'ours'`, `'theirs'`, `'both'`, `'none'`.
   Returns an updated blocks list.
+
+`require('conflux.commands').resolve_all(bufnr, blocks, type)` *conflux.resolve_all()*
+  Apply a resolution to every conflict block in `bufnr`.
+  `type` is one of `'ours'`, `'theirs'`, `'both'`, `'none'`.
+  Returns an updated (empty) blocks list.
+
+`require('conflux.navigate').next(bufnr, blocks)`   *conflux.navigate.next()*
+  Jump to the next conflict block after the cursor.
+  Wraps to the last block (with a notification) when already past the last.
+
+`require('conflux.navigate').prev(bufnr, blocks)`   *conflux.navigate.prev()*
+  Jump to the previous conflict block before the cursor.
+  Wraps to the first block (with a notification) when already before the first.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:

@@ -1,5 +1,5 @@
-local navigate = require('conflux.navigate')
 local detect = require('conflux.detect')
+local navigate = require('conflux.navigate')
 
 -- Two-conflict fixture for next/prev tests.
 -- Row layout:

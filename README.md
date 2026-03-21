@@ -11,6 +11,8 @@ conflux.nvim automatically detects conflict markers in your files and provides c
 - diff3 support: `|||||||` ancestor sections highlighted in a distinct color
 - Buffer-local keymaps set automatically when a conflict file is opened
 - Right-aligned keymap hint shown on each `<<<<<<<` marker line (`ours(co) | theirs(ct) | both(cb) | none(cz)`)
+- Resolve-all commands/keymaps to apply one choice to every conflict in the buffer at once
+- Navigate between conflict blocks with `]c` / `[c`
 - Highlights restored after colorscheme changes
 - Auto-detach when all conflicts are resolved
 
@@ -99,6 +101,7 @@ require('conflux').setup({
     theirs           = { bg = '#1a2b4d' },
     theirs_marker    = { bg = '#1a3d6b', bold = true },
     keymap_hint      = { fg = '#99bb99' },    -- virtual text hint on <<<<<<< line
+    all_keymap_hint  = { fg = '#99aacc' },    -- virtual text hint on >>>>>>> line
   },
 
   -- Set false to disable the default buffer-local keymaps
@@ -107,12 +110,26 @@ require('conflux').setup({
   -- Set false to hide the right-aligned keymap hint on each <<<<<<< marker line
   show_keymap_hints = true,
 
-  -- Keys for the default mappings
+  -- Keys for the default mappings (per-block)
   keymaps = {
     ours   = 'co',
     theirs = 'ct',
     both   = 'cb',
     none   = 'cz',
+  },
+
+  -- Keys for resolve-all mappings (apply choice to every conflict in the buffer)
+  all_keymaps = {
+    ours   = 'cO',
+    theirs = 'cT',
+    both   = 'cB',
+    none   = 'cZ',
+  },
+
+  -- Keys for navigation between conflict blocks
+  nav_keymaps = {
+    next = ']c',
+    prev = '[c',
   },
 })
 ```
@@ -130,6 +147,8 @@ require('conflux').setup({
 
 ## Commands
 
+### Per-block
+
 | Command          | Description                                  |
 |------------------|----------------------------------------------|
 | `:ConfluxOurs`   | Keep HEAD (ours) changes; discard theirs     |
@@ -137,18 +156,52 @@ require('conflux').setup({
 | `:ConfluxBoth`   | Keep both changes (ours first, then theirs)  |
 | `:ConfluxNone`   | Discard both sides entirely                  |
 
-All commands act on the conflict block that contains the cursor.
+These commands act on the conflict block that contains the cursor.
+
+### Resolve all
+
+| Command            | Description                                        |
+|--------------------|----------------------------------------------------|
+| `:ConfluxAllOurs`   | Keep ours in every conflict block in the buffer   |
+| `:ConfluxAllTheirs` | Keep theirs in every conflict block in the buffer |
+| `:ConfluxAllBoth`   | Keep both in every conflict block in the buffer   |
+| `:ConfluxAllNone`   | Discard both in every conflict block in the buffer|
+
+### Navigation
+
+| Command         | Description                        |
+|-----------------|------------------------------------|
+| `:ConfluxNext`  | Jump to the next conflict block    |
+| `:ConfluxPrev`  | Jump to the previous conflict block|
 
 ## Default Keymaps
 
 When a conflict file is opened, conflux sets buffer-local normal-mode keymaps:
 
-| Key  | Action                        |
-|------|-------------------------------|
-| `co` | Accept ours (`:ConfluxOurs`)   |
+**Per-block**
+
+| Key  | Action                          |
+|------|---------------------------------|
+| `co` | Accept ours (`:ConfluxOurs`)    |
 | `ct` | Accept theirs (`:ConfluxTheirs`)|
-| `cb` | Accept both (`:ConfluxBoth`)   |
-| `cz` | Accept none (`:ConfluxNone`)   |
+| `cb` | Accept both (`:ConfluxBoth`)    |
+| `cz` | Accept none (`:ConfluxNone`)    |
+
+**Resolve all**
+
+| Key  | Action                              |
+|------|-------------------------------------|
+| `cO` | Accept ours in all (`:ConfluxAllOurs`)    |
+| `cT` | Accept theirs in all (`:ConfluxAllTheirs`)|
+| `cB` | Accept both in all (`:ConfluxAllBoth`)    |
+| `cZ` | Accept none in all (`:ConfluxAllNone`)    |
+
+**Navigation**
+
+| Key  | Action                            |
+|------|-----------------------------------|
+| `]c` | Next conflict (`:ConfluxNext`)    |
+| `[c` | Previous conflict (`:ConfluxPrev`)|
 
 > **Note:** `co` and `ct` are two-key sequences that share the `c` prefix with
 > Vim's built-in change operator. This causes a brief timeout delay when typing
@@ -178,7 +231,8 @@ conflux defines these highlight groups (override them after `setup()`):
 | `ConfluxSeparator`     | `=======` separator line              |
 | `ConfluxTheirs`        | Theirs (incoming) content lines       |
 | `ConfluxTheirsMarker`  | `>>>>>>>` marker line                 |
-| `ConfluxKeymapHint`    | Right-aligned keymap hint virtual text|
+| `ConfluxKeymapHint`    | Right-aligned keymap hint on `<<<<<<<` line  |
+| `ConfluxAllKeymapHint` | Right-aligned resolve-all hint on `>>>>>>>` line |
 
 ## How it works
 
