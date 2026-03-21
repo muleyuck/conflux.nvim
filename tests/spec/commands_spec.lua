@@ -127,7 +127,10 @@ describe('commands.resolve_all', function()
   it('resolves all conflict blocks across the buffer', function()
     local blocks = detect.scan(bufnr)
     commands.resolve_all(bufnr, blocks, 'ours')
-    eq({ 'before', 'ours1', 'between', 'ours2', 'after' }, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+    eq(
+      { 'before', 'ours1', 'between', 'ours2', 'after' },
+      vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    )
   end)
 
   it('returns empty table when no conflicts', function()
@@ -157,7 +160,9 @@ describe('commands.resolve_all', function()
     assert(
       new_entries < num_blocks,
       ('atomicity: expected fewer than %d undo entries for %d blocks, got %d'):format(
-        num_blocks, num_blocks, new_entries
+        num_blocks,
+        num_blocks,
+        new_entries
       )
     )
   end)

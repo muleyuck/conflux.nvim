@@ -154,7 +154,13 @@ function M.apply(bufnr, blocks)
 
     -- >>>>>>> marker line (combined with all-keymaps hint if available)
     if all_hint_text then
-      M._mark_line_with_hint(bufnr, block.their_marker, HL_GROUPS.theirs_marker, all_hint_text, HL_GROUPS.all_keymap_hint)
+      M._mark_line_with_hint(
+        bufnr,
+        block.their_marker,
+        HL_GROUPS.theirs_marker,
+        all_hint_text,
+        HL_GROUPS.all_keymap_hint
+      )
     else
       M._mark_lines(bufnr, block.their_marker, block.their_marker + 1, HL_GROUPS.theirs_marker)
     end

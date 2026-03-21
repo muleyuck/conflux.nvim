@@ -21,10 +21,10 @@ M.defaults = {
     none = 'cz',
   },
   all_keymaps = {
-    ours   = 'cO',
+    ours = 'cO',
     theirs = 'cT',
-    both   = 'cB',
-    none   = 'cZ',
+    both = 'cB',
+    none = 'cZ',
   },
 }
 
