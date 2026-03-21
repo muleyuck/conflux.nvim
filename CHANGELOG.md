@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.1](https://github.com/muleyuck/conflux.nvim/compare/v1.0.0...v1.0.1) (2026-03-21)
+
+
+### Bug Fixes
+
+* use commit sha instead of tag name for stable tag to avoid unresolved ref error ([8f8d0ba](https://github.com/muleyuck/conflux.nvim/commit/8f8d0bac2949cfbde41e46260d869a383ec9df52))
+
 ## 1.0.0 (2026-03-21)
 
 
