@@ -47,6 +47,25 @@ local function make_cmd(action, method)
   end
 end
 
+-- Helper to build navigation command callbacks.
+-- Cannot reuse make_cmd because navigate functions return nothing (not new_blocks).
+local function make_nav_cmd(direction)
+  return function()
+    local ok, conflux = pcall(require, 'conflux')
+    if not ok then
+      vim.notify('conflux: plugin not loaded', vim.log.levels.ERROR)
+      return
+    end
+    local bufnr = vim.api.nvim_get_current_buf()
+    local blocks = conflux.get_blocks(bufnr)
+    if not blocks then
+      vim.notify('conflux: no conflicts tracked in this buffer', vim.log.levels.WARN)
+      return
+    end
+    require('conflux.navigate')[direction](bufnr, blocks)
+  end
+end
+
 vim.api.nvim_create_user_command(
   'ConfluxOurs',
   make_cmd('ours'),
@@ -83,4 +102,14 @@ vim.api.nvim_create_user_command(
   'ConfluxAllNone',
   make_cmd('none', 'resolve_all'),
   { desc = 'Discard both changes in all conflicts' }
+)
+vim.api.nvim_create_user_command(
+  'ConfluxNext',
+  make_nav_cmd('next'),
+  { desc = 'Jump to next conflict block' }
+)
+vim.api.nvim_create_user_command(
+  'ConfluxPrev',
+  make_nav_cmd('prev'),
+  { desc = 'Jump to previous conflict block' }
 )

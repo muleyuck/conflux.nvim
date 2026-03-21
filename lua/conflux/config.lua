@@ -26,6 +26,10 @@ M.defaults = {
     both = 'cB',
     none = 'cZ',
   },
+  nav_keymaps = {
+    next = ']c',
+    prev = '[c',
+  },
 }
 
 M._config = nil

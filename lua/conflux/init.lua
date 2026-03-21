@@ -120,6 +120,16 @@ function M._attach(bufnr, blocks)
         desc = 'Conflux: apply all ' .. action,
       })
     end
+
+    for action, key in pairs(cfg.nav_keymaps) do
+      vim.keymap.set('n', key, function()
+        local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
+        require('conflux.navigate')[action](bufnr, current_blocks)
+      end, {
+        buffer = bufnr,
+        desc = 'Conflux: ' .. action .. ' conflict',
+      })
+    end
   end
 
   -- Per-buffer autocommands (two augroups: watch survives detach, buf is cleared on detach)
@@ -189,6 +199,9 @@ function M.detach(bufnr)
         pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
       end
       for _, key in pairs(cfg.all_keymaps) do
+        pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+      end
+      for _, key in pairs(cfg.nav_keymaps) do
         pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
       end
     end
