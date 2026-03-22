@@ -1,8 +1,14 @@
+[![unit-test](https://github.com/muleyuck/conflux.nvim/actions/workflows/unit-test.yml/badge.svg)](https://github.com/muleyuck/conflux.nvim/actions/workflows/unit-test.yml)
+![Software License](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)
+[![Release](https://img.shields.io/github/release/muleyuck/conflux.nvim.svg)](https://github.com/muleyuck/conflux.nvim/releases/latest)
+
 # conflux.nvim
 
 VSCode-like Git conflict resolution for Neovim.
 
 conflux.nvim automatically detects conflict markers in your files and provides color-coded highlights plus quick commands to accept one side, both, or neither — without leaving Neovim.
+
+![demo](https://github.com/user-attachments/assets/fcf002f5-168f-41a7-9574-2f50686da18d)
 
 ## Features
 
@@ -11,8 +17,9 @@ conflux.nvim automatically detects conflict markers in your files and provides c
 - diff3 support: `|||||||` ancestor sections highlighted in a distinct color
 - Buffer-local keymaps set automatically when a conflict file is opened
 - Right-aligned keymap hint shown on each `<<<<<<<` marker line (`ours(co) | theirs(ct) | both(cb) | none(cz)`)
-- Resolve-all commands/keymaps to apply one choice to every conflict in the buffer at once
-- Navigate between conflict blocks with `]c` / `[c`
+- Resolve-all commands/keymaps to apply one choice to every conflict in the buffer at once — undoable in a single `u`
+- Navigate between conflict blocks with `]c` / `[c`, wrapping around with a count notification
+- Live re-scan as you type: conflicts are re-detected on every change and after undo/redo
 - Highlights restored after colorscheme changes
 - Auto-detach when all conflicts are resolved
 
@@ -245,6 +252,40 @@ conflux defines these highlight groups (override them after `setup()`):
 4. The buffer is immediately re-scanned and highlights are updated.
 5. When the last conflict is resolved, highlights and keymaps are removed.
 
+## Behaviour Notes
+
+### Navigation wrapping
+
+When there is no next conflict, `]c` wraps to the **last** block in the buffer.
+When there is no previous conflict, `[c` wraps to the **first** block.
+If the buffer contains two or more conflicts, a notification is shown on wrap:
+
+```
+conflux: wrapped to last conflict (3/3)
+conflux: wrapped to first conflict (1/3)
+```
+
+### Live conflict detection
+
+In addition to `BufReadPost` and `BufWritePost`, conflux watches `TextChanged`
+(normal mode, immediate) and `TextChangedI` (insert mode, 150 ms debounce).
+This means conflicts are highlighted as soon as markers appear — including after
+an undo that restores a previously resolved block.
+
+### Atomic undo for resolve-all
+
+`:ConfluxAllOurs`, `:ConfluxAllTheirs`, `:ConfluxAllBoth`, and `:ConfluxAllNone`
+apply all replacements as a single undo step.
+Pressing `u` once after a resolve-all restores every conflict block at once.
+
+### Cursor outside a conflict block
+
+If the cursor is not inside any conflict block when a per-block resolution
+command is run, conflux shows a warning and makes no changes:
+
+```
+conflux: cursor is not inside a conflict block
+```
 
 ## LICENCE
 
