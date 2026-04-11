@@ -40,7 +40,24 @@ M._config = nil
 
 function M.apply(user_config)
   user_config = user_config or {}
-  M._config = vim.tbl_deep_extend('force', M.defaults, user_config)
+  local base = vim.deepcopy(M.defaults)
+
+  -- When default_mappings is false, treat all default key values as disabled so
+  -- that only keys the user explicitly provides end up being registered.
+  if user_config.default_mappings == false then
+    for k in pairs(base.keymaps) do
+      base.keymaps[k] = false
+    end
+    for k in pairs(base.all_keymaps) do
+      base.all_keymaps[k] = false
+    end
+    for k in pairs(base.nav_keymaps) do
+      base.nav_keymaps[k] = false
+    end
+    base.quickfix_keymaps.open = false
+  end
+
+  M._config = vim.tbl_deep_extend('force', base, user_config)
   return M._config
 end
 

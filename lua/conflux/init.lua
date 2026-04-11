@@ -14,13 +14,11 @@ function M.setup(user_config)
   highlight.init()
 
   local cfg = config.get()
-  if cfg.default_mappings then
-    local qfkey = cfg.quickfix_keymaps and cfg.quickfix_keymaps.open
-    if qfkey and qfkey ~= '' then
-      vim.keymap.set('n', qfkey, function()
-        require('conflux.quickfix').quickfix()
-      end, { desc = 'Conflux: open project quickfix' })
-    end
+  local qfkey = cfg.quickfix_keymaps and cfg.quickfix_keymaps.open
+  if qfkey and qfkey ~= false then
+    vim.keymap.set('n', qfkey, function()
+      require('conflux.quickfix').quickfix()
+    end, { desc = 'Conflux: open project quickfix' })
   end
 
   M._is_setup = true
@@ -108,8 +106,8 @@ function M._attach(bufnr, blocks)
 
   local cfg = config.get()
 
-  if cfg.default_mappings then
-    for action, key in pairs(cfg.keymaps) do
+  for action, key in pairs(cfg.keymaps) do
+    if key ~= false then
       vim.keymap.set('n', key, function()
         local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
         local new_blocks = require('conflux.commands').resolve(bufnr, current_blocks, action)
@@ -119,8 +117,10 @@ function M._attach(bufnr, blocks)
         desc = 'Conflux: apply ' .. action,
       })
     end
+  end
 
-    for action, key in pairs(cfg.all_keymaps) do
+  for action, key in pairs(cfg.all_keymaps) do
+    if key ~= false then
       vim.keymap.set('n', key, function()
         local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
         local new_blocks = require('conflux.commands').resolve_all(bufnr, current_blocks, action)
@@ -130,8 +130,10 @@ function M._attach(bufnr, blocks)
         desc = 'Conflux: apply all ' .. action,
       })
     end
+  end
 
-    for action, key in pairs(cfg.nav_keymaps) do
+  for action, key in pairs(cfg.nav_keymaps) do
+    if key ~= false then
       vim.keymap.set('n', key, function()
         local current_blocks = M._attached[bufnr] and M._attached[bufnr].blocks or {}
         require('conflux.navigate')[action](bufnr, current_blocks)
@@ -204,15 +206,21 @@ function M.detach(bufnr)
   local ok, config = pcall(require, 'conflux.config')
   if ok then
     local cfg_ok, cfg = pcall(config.get)
-    if cfg_ok and cfg.default_mappings then
+    if cfg_ok then
       for _, key in pairs(cfg.keymaps) do
-        pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+        if key ~= false then
+          pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+        end
       end
       for _, key in pairs(cfg.all_keymaps) do
-        pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+        if key ~= false then
+          pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+        end
       end
       for _, key in pairs(cfg.nav_keymaps) do
-        pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+        if key ~= false then
+          pcall(vim.keymap.del, 'n', key, { buffer = bufnr })
+        end
       end
     end
   end

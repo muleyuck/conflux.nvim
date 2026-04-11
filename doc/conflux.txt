@@ -76,13 +76,15 @@ Pass a table to `setup()`. All keys are optional. >lua
       all_keymap_hint  = { fg = '#99aacc' },   -- virtual text hint on >>>>>>> line
     },
 
-    -- Set false to disable default buffer-local keymaps
+    -- Set false to opt out of default key values.
+    -- Explicitly provided keys are still registered (see |conflux-keymaps|).
     default_mappings = true,
 
     -- Set false to hide the right-aligned keymap hint on <<<<<<< marker lines
     show_keymap_hints = true,
 
-    -- Keys used for default per-block mappings (ignored when default_mappings = false)
+    -- Keys for per-block mappings.
+    -- Set an individual key to false to skip only that mapping.
     keymaps = {
       ours   = 'co',
       theirs = 'ct',
@@ -90,7 +92,8 @@ Pass a table to `setup()`. All keys are optional. >lua
       none   = 'cz',
     },
 
-    -- Keys for resolve-all mappings (apply choice to entire buffer at once)
+    -- Keys for resolve-all mappings (apply choice to entire buffer at once).
+    -- Set an individual key to false to skip only that mapping.
     all_keymaps = {
       ours   = 'cO',
       theirs = 'cT',
@@ -98,7 +101,8 @@ Pass a table to `setup()`. All keys are optional. >lua
       none   = 'cZ',
     },
 
-    -- Keys for navigating between conflict blocks
+    -- Keys for navigating between conflict blocks.
+    -- Set an individual key to false to skip only that mapping.
     nav_keymaps = {
       next = ']c',
       prev = '[c',
@@ -181,21 +185,28 @@ NOTE: `cq` is a global normal-mode keymap set when `setup()` is called.
 Unlike the buffer-local keymaps above (which are scoped to conflict files),
 `cq` permanently replaces any existing global mapping for that key.
 To use a different key, set `quickfix_keymaps = { open = '<leader>q' }` in
-`setup()`. To disable all keymaps including `cq`, set `default_mappings = false`.
+`setup()`.
 
-To use custom keys, set `default_mappings = false` and define your own: >lua
+Keymap registration behaviour ~
 
-  require('conflux').setup({
-    default_mappings = false,
-  })
+The final set of registered keys depends on how `default_mappings` and
+individual key values interact:
 
-  -- Then in an autocmd or ftplugin:
+  Configuration                                   Result ~
+  default_mappings = true (default)               All default keys registered
+  default_mappings = true + keymaps.none = false  co/ct/cb registered; cz skipped
+  default_mappings = true + nav_keymaps.prev=false ]c registered; [c skipped
+  default_mappings = false                         Nothing registered
+  default_mappings = false + keymaps.ours='<leader>co'  <leader>co registered; rest skipped
+
+To replace all keys with your own: >lua
+
+  require('conflux').setup({ default_mappings = false })
+
   vim.keymap.set('n', '<leader>co', '<Cmd>ConfluxOurs<CR>')
   vim.keymap.set('n', '<leader>ct', '<Cmd>ConfluxTheirs<CR>')
   vim.keymap.set('n', '<leader>cb', '<Cmd>ConfluxBoth<CR>')
   vim.keymap.set('n', '<leader>cz', '<Cmd>ConfluxNone<CR>')
-  vim.keymap.set('n', ']c', '<Cmd>ConfluxNext<CR>')
-  vim.keymap.set('n', '[c', '<Cmd>ConfluxPrev<CR>')
 <
 
 NOTE: `co` and `ct` as two-key sequences may momentarily delay Vim's
