@@ -113,3 +113,11 @@ vim.api.nvim_create_user_command(
   make_nav_cmd('prev'),
   { desc = 'Jump to previous conflict block' }
 )
+vim.api.nvim_create_user_command('ConfluxQuickfix', function()
+  local ok, quickfix = pcall(require, 'conflux.quickfix')
+  if not ok then
+    vim.notify('conflux: plugin not loaded', vim.log.levels.ERROR)
+    return
+  end
+  quickfix.quickfix()
+end, { desc = 'Populate quickfix list with all project conflict blocks' })

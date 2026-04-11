@@ -13,6 +13,16 @@ function M.setup(user_config)
   config.apply(user_config or {})
   highlight.init()
 
+  local cfg = config.get()
+  if cfg.default_mappings then
+    local qfkey = cfg.quickfix_keymaps and cfg.quickfix_keymaps.open
+    if qfkey and qfkey ~= '' then
+      vim.keymap.set('n', qfkey, function()
+        require('conflux.quickfix').quickfix()
+      end, { desc = 'Conflux: open project quickfix' })
+    end
+  end
+
   M._is_setup = true
 end
 
