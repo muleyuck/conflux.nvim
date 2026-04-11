@@ -29,6 +29,7 @@ Features:
   - Per-block commands and keymaps: ours / theirs / both / none
   - Resolve-all commands/keymaps to apply a choice to every conflict at once
   - Navigation keymaps ]c / [c to jump between conflict blocks
+  - Project-wide quickfix list via `cq` (`:ConfluxQuickfix`)
   - diff3 support (`|||||||` ancestor section)
   - Right-aligned keymap hint on each `<<<<<<<` marker line
   - Highlight restoration on colorscheme change
@@ -102,6 +103,11 @@ Pass a table to `setup()`. All keys are optional. >lua
       next = ']c',
       prev = '[c',
     },
+
+    -- Keys for the project-wide quickfix list (global keymap, registered at setup time)
+    quickfix_keymaps = {
+      open = 'cq',
+    },
   })
 <
 
@@ -129,6 +135,12 @@ Navigation commands:
 
   *:ConfluxNext*    Jump to the next conflict block.
   *:ConfluxPrev*    Jump to the previous conflict block.
+
+Project quickfix command:
+
+  *:ConfluxQuickfix*  Populate the quickfix list with all conflict blocks in
+                    the project (uses `git diff --name-only --diff-filter=U`)
+                    and open the quickfix window.
 
 After applying a resolution, the conflict markers are removed and the buffer
 is re-scanned. When all conflicts are resolved, highlights are cleared.
@@ -159,6 +171,17 @@ Navigation:
   ------+-----------------------------------------------
   ]c     Jump to next conflict    (equivalent to :ConfluxNext)
   [c     Jump to previous conflict (equivalent to :ConfluxPrev)
+
+Project quickfix (global keymap, registered at setup() time):
+  Key    Action
+  ------+-----------------------------------------------
+  cq     Open project conflict list (equivalent to :ConfluxQuickfix)
+
+NOTE: `cq` is a global normal-mode keymap set when `setup()` is called.
+Unlike the buffer-local keymaps above (which are scoped to conflict files),
+`cq` permanently replaces any existing global mapping for that key.
+To use a different key, set `quickfix_keymaps = { open = '<leader>q' }` in
+`setup()`. To disable all keymaps including `cq`, set `default_mappings = false`.
 
 To use custom keys, set `default_mappings = false` and define your own: >lua
 
@@ -237,6 +260,12 @@ Highlights are re-applied automatically on `ColorScheme` changes.
 `require('conflux.navigate').prev(bufnr, blocks)`   *conflux.navigate.prev()*
   Jump to the previous conflict block before the cursor.
   Wraps to the first block (with a notification) when already before the first.
+
+`require('conflux.quickfix').quickfix()`         *conflux.quickfix.quickfix()*
+  Populate the quickfix list with all conflict blocks found across the project
+  (determined via `git diff --name-only --diff-filter=U`) and open the
+  quickfix window. Called automatically by `:ConfluxQuickfix` and the `cq`
+  global keymap.
 
 ==============================================================================
 vim:tw=78:ts=8:ft=help:norl:
