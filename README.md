@@ -112,13 +112,14 @@ require('conflux').setup({
     all_keymap_hint  = { fg = '#99aacc' },    -- virtual text hint on >>>>>>> line
   },
 
-  -- Set false to disable the default buffer-local keymaps
+  -- Set false to opt out of all plugin-managed keymaps
   default_mappings = true,
 
   -- Set false to hide the right-aligned keymap hint on each <<<<<<< marker line
   show_keymap_hints = true,
 
-  -- Keys for the default mappings (per-block)
+  -- Keys for the default mappings (per-block).
+  -- Set any individual key to false to disable only that mapping.
   keymaps = {
     ours   = 'co',
     theirs = 'ct',
@@ -126,7 +127,8 @@ require('conflux').setup({
     none   = 'cz',
   },
 
-  -- Keys for resolve-all mappings (apply choice to every conflict in the buffer)
+  -- Keys for resolve-all mappings (apply choice to every conflict in the buffer).
+  -- Set any individual key to false to disable only that mapping.
   all_keymaps = {
     ours   = 'cO',
     theirs = 'cT',
@@ -134,13 +136,15 @@ require('conflux').setup({
     none   = 'cZ',
   },
 
-  -- Keys for navigation between conflict blocks
+  -- Keys for navigation between conflict blocks.
+  -- Set any individual key to false to disable only that mapping.
   nav_keymaps = {
     next = ']c',
     prev = '[c',
   },
 
-  -- Keys for the project-wide quickfix list (global keymap, registered at setup time)
+  -- Keys for the project-wide quickfix list (global keymap, registered at setup time).
+  -- Set to false to disable.
   quickfix_keymaps = {
     open = 'cq',
   },
@@ -229,13 +233,26 @@ When a conflict file is opened, conflux sets buffer-local normal-mode keymaps:
 
 > **Note:** `co` and `ct` are two-key sequences that share the `c` prefix with
 > Vim's built-in change operator. This causes a brief timeout delay when typing
-> `c` followed by any key. To avoid this, disable default mappings and define
-> your own:
+> `c` followed by any key. To avoid this, set `default_mappings = false` and
+> define your own keys — see [Keymap registration behaviour](#keymap-registration-behaviour) below.
+
+### Keymap registration behaviour
+
+The table below shows what ends up registered for different configurations:
+
+| Configuration | Result |
+|---|---|
+| `default_mappings = true` (default) | All keys in every table are registered |
+| `default_mappings = true` + `keymaps = { none = false }` | `co`, `ct`, `cb` registered; `cz` skipped |
+| `default_mappings = true` + `nav_keymaps = { prev = false }` | `]c` registered; `[c` skipped |
+| `default_mappings = false` | Nothing is registered |
+| `default_mappings = false` + `keymaps = { ours = '<leader>co' }` | `<leader>co` registered for ours; all other keys skipped |
+
+**Example — replace everything with your own keys:**
 
 ```lua
 require('conflux').setup({ default_mappings = false })
 
--- Then add your preferred keys, e.g. in an autocmd or after/plugin file:
 vim.keymap.set('n', '<leader>co', '<Cmd>ConfluxOurs<CR>')
 vim.keymap.set('n', '<leader>ct', '<Cmd>ConfluxTheirs<CR>')
 vim.keymap.set('n', '<leader>cb', '<Cmd>ConfluxBoth<CR>')
