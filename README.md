@@ -19,6 +19,7 @@ conflux.nvim automatically detects conflict markers in your files and provides c
 - Right-aligned keymap hint shown on each `<<<<<<<` marker line (`ours(co) | theirs(ct) | both(cb) | none(cz)`)
 - Resolve-all commands/keymaps to apply one choice to every conflict in the buffer at once — undoable in a single `u`
 - Navigate between conflict blocks with `]c` / `[c`, wrapping around with a count notification
+- Project-wide quickfix list of all conflict blocks via `cq` (`:ConfluxQuickfix`)
 - Live re-scan as you type: conflicts are re-detected on every change and after undo/redo
 - Highlights restored after colorscheme changes
 - Auto-detach when all conflicts are resolved
@@ -138,6 +139,11 @@ require('conflux').setup({
     next = ']c',
     prev = '[c',
   },
+
+  -- Keys for the project-wide quickfix list (global keymap, registered at setup time)
+  quickfix_keymaps = {
+    open = 'cq',
+  },
 })
 ```
 
@@ -209,6 +215,17 @@ When a conflict file is opened, conflux sets buffer-local normal-mode keymaps:
 |------|-----------------------------------|
 | `]c` | Next conflict (`:ConfluxNext`)    |
 | `[c` | Previous conflict (`:ConfluxPrev`)|
+
+**Project quickfix**
+
+| Key  | Action                                          |
+|------|-------------------------------------------------|
+| `cq` | List all project conflicts (`:ConfluxQuickfix`) |
+
+> **Note:** `cq` is registered as a **global** normal-mode keymap when `setup()` is called.
+> Unlike the other keymaps above (which are buffer-local and scoped to conflict files),
+> `cq` permanently replaces any existing global mapping for that key.
+> To use a different key, set `quickfix_keymaps = { open = '<leader>q' }` in your `setup()` call.
 
 > **Note:** `co` and `ct` are two-key sequences that share the `c` prefix with
 > Vim's built-in change operator. This causes a brief timeout delay when typing

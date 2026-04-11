@@ -30,6 +30,10 @@ M.defaults = {
     next = ']c',
     prev = '[c',
   },
+  -- Keys for the project-wide quickfix list (global keymap, registered at setup time)
+  quickfix_keymaps = {
+    open = 'cq',
+  },
 }
 
 M._config = nil
