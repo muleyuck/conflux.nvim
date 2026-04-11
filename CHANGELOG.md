@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.0](https://github.com/muleyuck/conflux.nvim/compare/v1.0.1...v1.1.0) (2026-04-11)
+
+
+### Features
+
+* add project-wide conflict quickfix list via ConfluxQuickfix command ([10b235a](https://github.com/muleyuck/conflux.nvim/commit/10b235add4ad3b246331d763fe23aa96a277dd76))
+* document ConfluxQuickfix command and cq keymap in README and help ([71ab4f5](https://github.com/muleyuck/conflux.nvim/commit/71ab4f5fff2661e9c35a4079399290b98248a1e5))
+* allow individual keymaps to be disabled by setting them to false ([9a6b6e1](https://github.com/muleyuck/conflux.nvim/commit/9a6b6e170b82b9e49dce995238b9f5810d301cdc))
+
 ## [1.0.1](https://github.com/muleyuck/conflux.nvim/compare/v1.0.0...v1.0.1) (2026-03-21)
 
 
