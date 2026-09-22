@@ -9,26 +9,14 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   release-please:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
-        id: release
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          config-file: .github/release-please-config.json
-          manifest-file: .github/.release-please-manifest.json
-      - uses: actions/checkout@v7
-      - name: Update stable tag
-        if: ${{ steps.release.outputs.release_created }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -fa stable "${{ steps.release.outputs.sha }}" -m "Current stable release: ${{ steps.release.outputs.tag_name }}"
-          git push origin stable --force
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: muleyuck/github-actions/.github/workflows/release-please.yml@v1
+    with:
+      update-stable-tag: true
