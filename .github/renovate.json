@@ -8,6 +8,8 @@
   "automergeType": "pr",
   "automergeStrategy": "squash",
   "dependencyDashboard": true,
+  "minimumReleaseAge": "3 days",
+  "internalChecksFilter": "strict",
   "packageRules": [
     { "matchManagers": ["github-actions"], "groupName": "github-actions dependencies" },
     { "matchManagers": ["github-actions"], "matchUpdateTypes": ["patch", "minor", "digest"], "automerge": true }
